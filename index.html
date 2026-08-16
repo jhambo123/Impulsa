@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>MarketPulse — Financial News Intelligence</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="topbar">
+
+    <a href="#" class="logo">
+      <span class="logo-box">M</span>
+      <span>Market<span class="orange">Pulse</span></span>
+    </a>
+
+    <div class="header-actions">
+
+      <div class="live">
+        <span></span>
+        LIVE FEED
+      </div>
+
+      <button id="refreshBtn" class="icon-button">
+        ↻
+      </button>
+
+      <button id="settingsBtn" class="settings-button">
+        ⚙ Settings
+      </button>
+
+    </div>
+
+  </header>
+
+
+  <!-- HERO -->
+  <section class="hero">
+
+    <div>
+
+      <p class="eyebrow">
+        FINANCIAL MARKET INTELLIGENCE
+      </p>
+
+      <h1>
+        Know what<br>
+        <span>moves the markets.</span>
+      </h1>
+
+      <p class="hero-description">
+        Track market-moving news, estimate its impact,
+        and explore the reasons behind potential market reactions.
+      </p>
+
+    </div>
+
+    <div class="clock-box">
+
+      <span>MARKET TIME</span>
+
+      <strong id="clock">
+        --:--:--
+      </strong>
+
+    </div>
+
+  </section>
+
+
+  <!-- DASHBOARD -->
+  <main class="dashboard">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+      <div class="sidebar-header">
+
+        <div>
+          <p class="eyebrow">WATCHLIST</p>
+          <h2>Markets</h2>
+        </div>
+
+        <button id="editFilters" class="edit-button">
+          Edit
+        </button>
+
+      </div>
+
+
+      <!-- MARKET FILTERS -->
+      <div id="marketFilters"></div>
+
+
+      <div class="divider"></div>
+
+
+      <!-- IMPACT FILTER -->
+      <div class="filter">
+
+        <label>
+          MINIMUM IMPACT
+        </label>
+
+        <div class="range">
+
+          <input
+            type="range"
+            id="minImpact"
+            min="1"
+            max="10"
+            value="1"
+          >
+
+          <strong>
+            <span id="impactValue">1</span>/10
+          </strong>
+
+        </div>
+
+      </div>
+
+
+      <!-- DIRECTION -->
+      <div class="filter">
+
+        <label>
+          DIRECTION
+        </label>
+
+        <div class="segmented" id="directionFilter">
+
+          <button class="active" data-direction="all">
+            All
+          </button>
+
+          <button data-direction="bullish">
+            Bull
+          </button>
+
+          <button data-direction="bearish">
+            Bear
+          </button>
+
+          <button data-direction="neutral">
+            Neutral
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- DURATION -->
+      <div class="filter">
+
+        <label>
+          RELEVANCE WINDOW
+        </label>
+
+        <select id="durationFilter">
+
+          <option value="all">
+            Any duration
+          </option>
+
+          <option value="hours">
+            1–6 hours
+          </option>
+
+          <option value="days">
+            1–3 days
+          </option>
+
+          <option value="weeks">
+            1–3 weeks
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <button id="resetFilters" class="reset">
+        Reset filters
+      </button>
+
+    </aside>
+
+
+    <!-- NEWS -->
+    <section class="news-section">
+
+      <div class="news-header">
+
+        <div>
+
+          <p class="eyebrow">
+            MARKET NEWS
+          </p>
+
+          <h2>
+            Latest intelligence
+          </h2>
+
+        </div>
+
+        <div class="news-meta">
+
+          <span id="resultCount">
+            0 stories
+          </span>
+
+          <span>•</span>
+
+          <span id="lastUpdated">
+            Updated just now
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <div id="newsFeed" class="news-feed"></div>
+
+
+      <div id="emptyState" class="empty hidden">
+
+        <div class="empty-icon">
+          ⌕
+        </div>
+
+        <h3>
+          No stories match your filters
+        </h3>
+
+        <p>
+          Try lowering the impact threshold or changing your markets.
+        </p>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+
+<!-- AI MODAL -->
+<div id="analysisModal" class="modal-background hidden">
+
+  <div class="modal">
+
+    <button
+      class="close"
+      data-close="analysisModal">
+      ×
+    </button>
+
+    <p class="eyebrow">
+      AI MARKET ANALYSIS
+    </p>
+
+    <div id="analysisContent"></div>
+
+    <div class="ai-placeholder">
+
+      <span>✦</span>
+
+      <div>
+
+        <strong>
+          AI connection placeholder
+        </strong>
+
+        <p>
+          This section is ready for your AI.
+          Connect your own AI backend later.
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- SETTINGS -->
+<div id="settingsModal" class="modal-background hidden">
+
+  <div class="modal settings">
+
+    <button
+      class="close"
+      data-close="settingsModal">
+      ×
+    </button>
+
+    <p class="eyebrow">
+      PERSONALIZATION
+    </p>
+
+    <h2>
+      Feed settings
+    </h2>
+
+    <p class="modal-description">
+      Choose exactly what you want to see.
+    </p>
+
+
+    <div class="settings-section">
+
+      <h3>
+        Markets
+      </h3>
+
+      <div
+        id="settingsMarkets"
+        class="settings-markets">
+      </div>
+
+    </div>
+
+
+    <div class="settings-section">
+
+      <h3>
+        Minimum impact
+      </h3>
+
+      <div class="settings-range">
+
+        <input
+          type="range"
+          id="settingsImpact"
+          min="1"
+          max="10"
+          value="1"
+        >
+
+        <span>
+          <b id="settingsImpactValue">1</b>/10
+        </span>
+
+      </div>
+
+    </div>
+
+
+    <div class="settings-section">
+
+      <h3>
+        Relevance
+      </h3>
+
+      <div class="duration-buttons">
+
+        <button
+          class="active"
+          data-duration="all">
+          Any
+        </button>
+
+        <button data-duration="hours">
+          1–6 hours
+        </button>
+
+        <button data-duration="days">
+          1–3 days
+        </button>
+
+        <button data-duration="weeks">
+          1–3 weeks
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <button
+      id="closeSettings"
+      class="primary">
+      Done
+    </button>
+
+  </div>
+
+</div>
+
+
+<script src="script.js"></script>
+
+</body>
+</html>
