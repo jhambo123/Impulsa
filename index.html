@@ -2,410 +2,150 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>MarketPulse — Financial News Intelligence</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Impulsa</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="apple-touch-icon" href="icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
-
 <body>
 
-<div class="app">
+  <!-- PAGE 1: FILTER SETUP -->
+  <div id="setupPage" class="page active">
+    <div class="setup-container">
+      <h1 class="logo">Impulsa</h1>
+      <p class="subtext">Set your preferences</p>
 
-  <!-- HEADER -->
-  <header class="topbar">
-
-    <a href="#" class="logo">
-      <span class="logo-box">M</span>
-      <span>Market<span class="orange">Pulse</span></span>
-    </a>
-
-    <div class="header-actions">
-
-      <div class="live">
-        <span></span>
-        LIVE FEED
-      </div>
-
-      <button id="refreshBtn" class="icon-button">
-        ↻
-      </button>
-
-      <button id="settingsBtn" class="settings-button">
-        ⚙ Settings
-      </button>
-
-    </div>
-
-  </header>
-
-
-  <!-- HERO -->
-  <section class="hero">
-
-    <div>
-
-      <p class="eyebrow">
-        FINANCIAL MARKET INTELLIGENCE
-      </p>
-
-      <h1>
-        Know what<br>
-        <span>moves the markets.</span>
-      </h1>
-
-      <p class="hero-description">
-        Track market-moving news, estimate its impact,
-        and explore the reasons behind potential market reactions.
-      </p>
-
-    </div>
-
-    <div class="clock-box">
-
-      <span>MARKET TIME</span>
-
-      <strong id="clock">
-        --:--:--
-      </strong>
-
-    </div>
-
-  </section>
-
-
-  <!-- DASHBOARD -->
-  <main class="dashboard">
-
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-
-      <div class="sidebar-header">
-
-        <div>
-          <p class="eyebrow">WATCHLIST</p>
-          <h2>Markets</h2>
-        </div>
-
-        <button id="editFilters" class="edit-button">
-          Edit
+      <!-- PULL-DOWN FILTERS -->
+      <div class="dropdown-section">
+        <button class="dropdown-toggle" id="marketsToggle">
+          Markets <span class="arrow">▼</span>
         </button>
-
-      </div>
-
-
-      <!-- MARKET FILTERS -->
-      <div id="marketFilters"></div>
-
-
-      <div class="divider"></div>
-
-
-      <!-- IMPACT FILTER -->
-      <div class="filter">
-
-        <label>
-          MINIMUM IMPACT
-        </label>
-
-        <div class="range">
-
-          <input
-            type="range"
-            id="minImpact"
-            min="1"
-            max="10"
-            value="1"
-          >
-
-          <strong>
-            <span id="impactValue">1</span>/10
-          </strong>
-
+        <div class="dropdown-content" id="marketsDropdown">
+          <label class="check-item">
+            <input type="checkbox" name="market" value="Indices" checked> Indices
+          </label>
+          <label class="check-item">
+            <input type="checkbox" name="market" value="Forex" checked> Forex
+          </label>
+          <label class="check-item">
+            <input type="checkbox" name="market" value="Crypto" checked> Crypto
+          </label>
+          <label class="check-item">
+            <input type="checkbox" name="market" value="Commodities" checked> Commodities
+          </label>
+          <label class="check-item">
+            <input type="checkbox" name="market" value="Economic" checked> Economic
+          </label>
+          <label class="check-item">
+            <input type="checkbox" name="market" value="Bonds" checked> Bonds
+          </label>
         </div>
-
       </div>
 
-
-      <!-- DIRECTION -->
-      <div class="filter">
-
-        <label>
-          DIRECTION
-        </label>
-
-        <div class="segmented" id="directionFilter">
-
-          <button class="active" data-direction="all">
-            All
-          </button>
-
-          <button data-direction="bullish">
-            Bull
-          </button>
-
-          <button data-direction="bearish">
-            Bear
-          </button>
-
-          <button data-direction="neutral">
-            Neutral
-          </button>
-
+      <div class="dropdown-section">
+        <button class="dropdown-toggle" id="impactToggle">
+          Minimum Impact <span class="arrow">▼</span>
+        </button>
+        <div class="dropdown-content" id="impactDropdown">
+          <div class="slider-wrap">
+            <input type="range" id="impactSlider" min="1" max="10" value="5" class="slider">
+            <div class="slider-val"><span id="impactVal">5</span> / 10 ⭐</div>
+          </div>
         </div>
-
       </div>
 
-
-      <!-- DURATION -->
-      <div class="filter">
-
-        <label>
-          RELEVANCE WINDOW
-        </label>
-
-        <select id="durationFilter">
-
-          <option value="all">
-            Any duration
-          </option>
-
-          <option value="hours">
-            1–6 hours
-          </option>
-
-          <option value="days">
-            1–3 days
-          </option>
-
-          <option value="weeks">
-            1–3 weeks
-          </option>
-
-        </select>
-
-      </div>
-
-
-      <button id="resetFilters" class="reset">
-        Reset filters
-      </button>
-
-    </aside>
-
-
-    <!-- NEWS -->
-    <section class="news-section">
-
-      <div class="news-header">
-
-        <div>
-
-          <p class="eyebrow">
-            MARKET NEWS
-          </p>
-
-          <h2>
-            Latest intelligence
-          </h2>
-
+      <div class="dropdown-section">
+        <button class="dropdown-toggle" id="notifToggle">
+          Notifications <span class="arrow">▼</span>
+        </button>
+        <div class="dropdown-content" id="notifDropdown">
+          <label class="toggle-item">
+            <input type="checkbox" id="notifCheck" checked> Enable Alerts
+          </label>
         </div>
-
-        <div class="news-meta">
-
-          <span id="resultCount">
-            0 stories
-          </span>
-
-          <span>•</span>
-
-          <span id="lastUpdated">
-            Updated just now
-          </span>
-
-        </div>
-
       </div>
 
-
-      <div id="newsFeed" class="news-feed"></div>
-
-
-      <div id="emptyState" class="empty hidden">
-
-        <div class="empty-icon">
-          ⌕
-        </div>
-
-        <h3>
-          No stories match your filters
-        </h3>
-
-        <p>
-          Try lowering the impact threshold or changing your markets.
-        </p>
-
-      </div>
-
-    </section>
-
-  </main>
-
-</div>
-
-
-<!-- AI MODAL -->
-<div id="analysisModal" class="modal-background hidden">
-
-  <div class="modal">
-
-    <button
-      class="close"
-      data-close="analysisModal">
-      ×
-    </button>
-
-    <p class="eyebrow">
-      AI MARKET ANALYSIS
-    </p>
-
-    <div id="analysisContent"></div>
-
-    <div class="ai-placeholder">
-
-      <span>✦</span>
-
-      <div>
-
-        <strong>
-          AI connection placeholder
-        </strong>
-
-        <p>
-          This section is ready for your AI.
-          Connect your own AI backend later.
-        </p>
-
-      </div>
-
+      <!-- BIG ORANGE CONTINUE — BOTTOM LEFT -->
+      <button id="continueBtn" class="continue-btn">Continue →</button>
     </div>
-
   </div>
 
-</div>
-
-
-<!-- SETTINGS -->
-<div id="settingsModal" class="modal-background hidden">
-
-  <div class="modal settings">
-
-    <button
-      class="close"
-      data-close="settingsModal">
-      ×
-    </button>
-
-    <p class="eyebrow">
-      PERSONALIZATION
-    </p>
-
-    <h2>
-      Feed settings
-    </h2>
-
-    <p class="modal-description">
-      Choose exactly what you want to see.
-    </p>
-
-
-    <div class="settings-section">
-
-      <h3>
-        Markets
-      </h3>
-
-      <div
-        id="settingsMarkets"
-        class="settings-markets">
+  <!-- PAGE 2: HOME SCREEN (LOCKED) -->
+  <div id="homePage" class="page">
+    <header class="home-header">
+      <h1>Impulsa</h1>
+      <div class="header-right">
+        <span id="clock" class="clock"></span>
+        <button id="settingsBtn" class="settings-btn">⚙️</button>
       </div>
-
-    </div>
-
-
-    <div class="settings-section">
-
-      <h3>
-        Minimum impact
-      </h3>
-
-      <div class="settings-range">
-
-        <input
-          type="range"
-          id="settingsImpact"
-          min="1"
-          max="10"
-          value="1"
-        >
-
-        <span>
-          <b id="settingsImpactValue">1</b>/10
-        </span>
-
-      </div>
-
-    </div>
-
-
-    <div class="settings-section">
-
-      <h3>
-        Relevance
-      </h3>
-
-      <div class="duration-buttons">
-
-        <button
-          class="active"
-          data-duration="all">
-          Any
-        </button>
-
-        <button data-duration="hours">
-          1–6 hours
-        </button>
-
-        <button data-duration="days">
-          1–3 days
-        </button>
-
-        <button data-duration="weeks">
-          1–3 weeks
-        </button>
-
-      </div>
-
-    </div>
-
-
-    <button
-      id="closeSettings"
-      class="primary">
-      Done
-    </button>
-
+    </header>
+    <div id="newsFeed" class="news-feed"></div>
+    <button id="refreshBtn" class="refresh-btn">↻ Refresh</button>
   </div>
 
-</div>
+  <!-- PAGE 3: SETTINGS -->
+  <div id="settingsPage" class="page">
+    <div class="setup-container">
+      <div class="settings-top">
+        <h2>Settings</h2>
+        <button id="backBtn" class="back-btn">← Back</button>
+      </div>
 
+      <div class="dropdown-section">
+        <button class="dropdown-toggle" id="s_marketsToggle">
+          Markets <span class="arrow">▼</span>
+        </button>
+        <div class="dropdown-content" id="s_marketsDropdown">
+          <label class="check-item">
+            <input type="checkbox" id="s_Indices"> Indices
+          </label>
+          <label class="check-item">
+            <input type="checkbox" id="s_Forex"> Forex
+          </label>
+          <label class="check-item">
+            <input type="checkbox" id="s_Crypto"> Crypto
+          </label>
+          <label class="check-item">
+            <input type="checkbox" id="s_Commodities"> Commodities
+          </label>
+          <label class="check-item">
+            <input type="checkbox" id="s_Economic"> Economic
+          </label>
+          <label class="check-item">
+            <input type="checkbox" id="s_Bonds"> Bonds
+          </label>
+        </div>
+      </div>
 
-<script src="script.js"></script>
+      <div class="dropdown-section">
+        <button class="dropdown-toggle" id="s_impactToggle">
+          Minimum Impact <span class="arrow">▼</span>
+        </button>
+        <div class="dropdown-content" id="s_impactDropdown">
+          <div class="slider-wrap">
+            <input type="range" id="s_impactSlider" min="1" max="10" value="5" class="slider">
+            <div class="slider-val"><span id="s_impactVal">5</span> / 10 ⭐</div>
+          </div>
+        </div>
+      </div>
 
+      <div class="dropdown-section">
+        <button class="dropdown-toggle" id="s_notifToggle">
+          Notifications <span class="arrow">▼</span>
+        </button>
+        <div class="dropdown-content" id="s_notifDropdown">
+          <label class="toggle-item">
+            <input type="checkbox" id="s_notifCheck"> Enable Alerts
+          </label>
+        </div>
+      </div>
+
+      <button id="saveBtn" class="continue-btn">Save →</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
