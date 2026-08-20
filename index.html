@@ -2,150 +2,74 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Impulsa</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Impulsa — Market News</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <link rel="apple-touch-icon" href="icon.png">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
 
-  <!-- PAGE 1: FILTER SETUP -->
-  <div id="setupPage" class="page active">
-    <div class="setup-container">
-      <h1 class="logo">Impulsa</h1>
-      <p class="subtext">Set your preferences</p>
+<div class="app">
 
-      <!-- PULL-DOWN FILTERS -->
-      <div class="dropdown-section">
-        <button class="dropdown-toggle" id="marketsToggle">
-          Markets <span class="arrow">▼</span>
+  <!-- ========== FILTER SETUP PAGE ========== -->
+  <div id="filterPage" class="page active">
+    <div class="container">
+      <h1 class="logo-text">Impulsa</h1>
+      <p class="subheading">Select your market categories</p>
+
+      <!-- Market Categories Dropdown -->
+      <div class="dropdown-box">
+        <button class="dropdown-btn" id="marketDropdown">
+          Market Categories ▼
         </button>
-        <div class="dropdown-content" id="marketsDropdown">
-          <label class="check-item">
-            <input type="checkbox" name="market" value="Indices" checked> Indices
-          </label>
-          <label class="check-item">
-            <input type="checkbox" name="market" value="Forex" checked> Forex
-          </label>
-          <label class="check-item">
-            <input type="checkbox" name="market" value="Crypto" checked> Crypto
-          </label>
-          <label class="check-item">
-            <input type="checkbox" name="market" value="Commodities" checked> Commodities
-          </label>
-          <label class="check-item">
-            <input type="checkbox" name="market" value="Economic" checked> Economic
-          </label>
-          <label class="check-item">
-            <input type="checkbox" name="market" value="Bonds" checked> Bonds
-          </label>
+        <div class="dropdown-content" id="marketContent">
+          <label><input type="checkbox" class="market-check" value="Indices"> 📊 Indices</label>
+          <label><input type="checkbox" class="market-check" value="Forex"> 💱 Forex</label>
+          <label><input type="checkbox" class="market-check" value="Commodities"> ⛏️ Commodities</label>
+          <label><input type="checkbox" class="market-check" value="Crypto"> ₿ Crypto</label>
+          <label><input type="checkbox" class="market-check" value="Stocks"> 📈 Stocks</label>
+          <label><input type="checkbox" class="market-check" value="Bonds"> 📜 Bonds</label>
+          <label><input type="checkbox" class="market-check" value="ETFs"> 📦 ETFs</label>
         </div>
       </div>
 
-      <div class="dropdown-section">
-        <button class="dropdown-toggle" id="impactToggle">
-          Minimum Impact <span class="arrow">▼</span>
+      <!-- Impact Level Dropdown -->
+      <div class="dropdown-box">
+        <button class="dropdown-btn" id="impactDropdown">
+          Minimum Impact Level ▼
         </button>
-        <div class="dropdown-content" id="impactDropdown">
-          <div class="slider-wrap">
-            <input type="range" id="impactSlider" min="1" max="10" value="5" class="slider">
-            <div class="slider-val"><span id="impactVal">5</span> / 10 ⭐</div>
-          </div>
+        <div class="dropdown-content" id="impactContent">
+          <label><input type="radio" name="impact" value="7"> ⭐ 7 & above</label>
+          <label><input type="radio" name="impact" value="8"> ⭐ 8 & above</label>
+          <label><input type="radio" name="impact" value="9"> ⭐ 9 & above</label>
+          <label><input type="radio" name="impact" value="10"> ⭐ Only 10</label>
         </div>
       </div>
 
-      <div class="dropdown-section">
-        <button class="dropdown-toggle" id="notifToggle">
-          Notifications <span class="arrow">▼</span>
-        </button>
-        <div class="dropdown-content" id="notifDropdown">
-          <label class="toggle-item">
-            <input type="checkbox" id="notifCheck" checked> Enable Alerts
-          </label>
-        </div>
-      </div>
-
-      <!-- BIG ORANGE CONTINUE — BOTTOM LEFT -->
-      <button id="continueBtn" class="continue-btn">Continue →</button>
+      <!-- Continue Button -->
+      <button class="continue-btn" id="continueBtn">Continue</button>
     </div>
   </div>
 
-  <!-- PAGE 2: HOME SCREEN (LOCKED) -->
+  <!-- ========== HOME SCREEN ========== -->
   <div id="homePage" class="page">
-    <header class="home-header">
-      <h1>Impulsa</h1>
-      <div class="header-right">
-        <span id="clock" class="clock"></span>
-        <button id="settingsBtn" class="settings-btn">⚙️</button>
-      </div>
+    <header class="topbar">
+      <h1 class="logo-text">Impulsa</h1>
+      <button class="settings-btn" id="settingsBtn">⚙️</button>
     </header>
-    <div id="newsFeed" class="news-feed"></div>
-    <button id="refreshBtn" class="refresh-btn">↻ Refresh</button>
-  </div>
 
-  <!-- PAGE 3: SETTINGS -->
-  <div id="settingsPage" class="page">
-    <div class="setup-container">
-      <div class="settings-top">
-        <h2>Settings</h2>
-        <button id="backBtn" class="back-btn">← Back</button>
+    <div class="container">
+      <p class="subheading">Live News Feed</p>
+      <div id="newsFeed" class="news-feed">
+        <div class="empty-state">News will appear here once live...</div>
       </div>
-
-      <div class="dropdown-section">
-        <button class="dropdown-toggle" id="s_marketsToggle">
-          Markets <span class="arrow">▼</span>
-        </button>
-        <div class="dropdown-content" id="s_marketsDropdown">
-          <label class="check-item">
-            <input type="checkbox" id="s_Indices"> Indices
-          </label>
-          <label class="check-item">
-            <input type="checkbox" id="s_Forex"> Forex
-          </label>
-          <label class="check-item">
-            <input type="checkbox" id="s_Crypto"> Crypto
-          </label>
-          <label class="check-item">
-            <input type="checkbox" id="s_Commodities"> Commodities
-          </label>
-          <label class="check-item">
-            <input type="checkbox" id="s_Economic"> Economic
-          </label>
-          <label class="check-item">
-            <input type="checkbox" id="s_Bonds"> Bonds
-          </label>
-        </div>
-      </div>
-
-      <div class="dropdown-section">
-        <button class="dropdown-toggle" id="s_impactToggle">
-          Minimum Impact <span class="arrow">▼</span>
-        </button>
-        <div class="dropdown-content" id="s_impactDropdown">
-          <div class="slider-wrap">
-            <input type="range" id="s_impactSlider" min="1" max="10" value="5" class="slider">
-            <div class="slider-val"><span id="s_impactVal">5</span> / 10 ⭐</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="dropdown-section">
-        <button class="dropdown-toggle" id="s_notifToggle">
-          Notifications <span class="arrow">▼</span>
-        </button>
-        <div class="dropdown-content" id="s_notifDropdown">
-          <label class="toggle-item">
-            <input type="checkbox" id="s_notifCheck"> Enable Alerts
-          </label>
-        </div>
-      </div>
-
-      <button id="saveBtn" class="continue-btn">Save →</button>
     </div>
   </div>
 
-  <script src="script.js"></script>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
