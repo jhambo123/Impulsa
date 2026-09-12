@@ -1,8 +1,8 @@
 // ==================================================
-// IMPULSA — NOTIFICATIONS + DETAIL EXPLANATIONS VERSION
+// IMPULSA — FILTERS SAVED UNTIL YOU CHANGE THEM
 // ==================================================
 
-// 🔑 YOUR NEWSAPI KEY
+// 🔑 PUT YOUR REAL NEWSAPI KEY HERE
 const NEWS_API_KEY = "pub_98a9005051034de29cb0aca05a77fc4a";
 
 const setupPage = document.getElementById('setup-page');
@@ -19,54 +19,90 @@ const notificationsToggle = document.getElementById('notifications-enabled');
 const newsFeed = document.getElementById('news-feed');
 const detailContent = document.getElementById('detail-content');
 
-let lastNewsTitles = []; // Track for new notifications
+let lastNewsTitles = [];
 
-// --------------------------
-// DROPDOWNS
-// --------------------------
+// ==================================================
+// REMEMBER EVERYTHING ON LOAD
+// ==================================================
+window.addEventListener('load', () => {
+  const savedFilters = localStorage.getItem('impulsa_filters');
+  const lastScreen = localStorage.getItem('impulsa_last_screen');
+
+  if (savedFilters) {
+    const f = JSON.parse(savedFilters);
+
+    // Restore markets
+    document.querySelectorAll('input[name="markets"]').forEach(cb => {
+      cb.checked = f.markets.includes(cb.value);
+    });
+    const allBoxes = document.querySelectorAll('input[name="markets"]');
+    selectAllMarkets.checked = [...allBoxes].every(cb => cb.checked);
+
+    // Restore longevity
+    const longRadio = document.querySelector(`input[name="longevity"][value="${f.longevity}"]`);
+    if (longRadio) longRadio.checked = true;
+
+    // Restore impact
+    if (f.showAllImpact) {
+      impactAllCheckbox.checked = true;
+      slider.disabled = true;
+      scoreValue.textContent = "All Scores";
+    } else {
+      impactAllCheckbox.checked = false;
+      slider.disabled = false;
+      slider.value = f.minImpact || 7;
+      scoreValue.textContent = `${slider.value} – 10`;
+    }
+
+    // Go to last screen
+    if (lastScreen === 'home') {
+      setupPage.classList.remove('active');
+      homePage.classList.add('active');
+      fetchAndShowNews();
+    }
+  }
+
+  // Restore notification toggle
+  const notifOn = localStorage.getItem('impulsa_notifications') === 'true';
+  notificationsToggle.checked = notifOn && Notification.permission === "granted";
+});
+
+// ==================================================
+// DROPDOWNS & TOGGLES
+// ==================================================
 document.querySelectorAll('.dropdown-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.getElementById(btn.getAttribute('data-target')).classList.toggle('open');
+    document.getElementById(btn.dataset.target).classList.toggle('open');
   });
 });
 
-// Select All Markets
 selectAllMarkets.addEventListener('change', () => {
   document.querySelectorAll('input[name="markets"]').forEach(cb => cb.checked = selectAllMarkets.checked);
 });
 
-// Impact Slider + All
 slider.addEventListener('input', () => {
   scoreValue.textContent = `${slider.value} – 10`;
   impactAllCheckbox.checked = false;
 });
+
 impactAllCheckbox.addEventListener('change', () => {
   slider.disabled = impactAllCheckbox.checked;
   scoreValue.textContent = impactAllCheckbox.checked ? "All Scores" : `${slider.value} – 10`;
 });
 
-// --------------------------
-// NOTIFICATION PERMISSION
-// --------------------------
 notificationsToggle.addEventListener('change', async () => {
-  if (notificationsToggle.checked && "Notification" in window) {
-    const permission = await Notification.requestPermission();
-    notificationsToggle.checked = (permission === "granted");
-    localStorage.setItem('impulsa_notifications', notificationsToggle.checked);
-  } else {
-    localStorage.setItem('impulsa_notifications', 'false');
+  if (notificationsToggle.checked) {
+    const perm = await Notification.requestPermission();
+    notificationsToggle.checked = perm === "granted";
   }
+  localStorage.setItem('impulsa_notifications', notificationsToggle.checked);
 });
 
-// Load saved notification setting
-const savedNotif = localStorage.getItem('impulsa_notifications') === 'true';
-notificationsToggle.checked = savedNotif && "Notification" in window && Notification.permission === "granted";
-
-// --------------------------
-// CONTINUE → GO!
-// --------------------------
+// ==================================================
+// CONTINUE — SAVE FILTERS
+// ==================================================
 continueBtn.addEventListener('click', async () => {
-  const selectedMarkets = Array.from(document.querySelectorAll('input[name="markets"]:checked')).map(cb => cb.value);
+  const selectedMarkets = [...document.querySelectorAll('input[name="markets"]:checked')].map(cb => cb.value);
   if (selectedMarkets.length === 0) return alert('Pick at least one market first!');
 
   const filters = {
@@ -75,7 +111,10 @@ continueBtn.addEventListener('click', async () => {
     minImpact: impactAllCheckbox.checked ? 1 : parseInt(slider.value),
     showAllImpact: impactAllCheckbox.checked
   };
+
+  // ✅ SAVED — stays until you change it
   localStorage.setItem('impulsa_filters', JSON.stringify(filters));
+  localStorage.setItem('impulsa_last_screen', 'home');
 
   setupPage.classList.remove('active');
   homePage.classList.add('active');
@@ -83,23 +122,28 @@ continueBtn.addEventListener('click', async () => {
   await fetchAndShowNews();
 });
 
-// Settings & Back
+// ==================================================
+// SETTINGS — GO EDIT FILTERS
+// ==================================================
 settingsBtn.addEventListener('click', () => {
+  localStorage.setItem('impulsa_last_screen', 'setup');
   homePage.classList.remove('active');
   setupPage.classList.add('active');
 });
+
 backBtn.addEventListener('click', () => {
+  localStorage.setItem('impulsa_last_screen', 'home');
   detailPage.classList.remove('active');
   homePage.classList.add('active');
 });
 
-// --------------------------
-// FETCH NEWS
-// --------------------------
+// ==================================================
+// FETCH & SCORE NEWS
+// ==================================================
 async function fetchAndShowNews() {
   if (!homePage.classList.contains('active')) return;
   newsFeed.innerHTML = '<p class="empty-state">⚡ Loading news...</p>';
-  
+
   const filters = JSON.parse(localStorage.getItem('impulsa_filters'));
   const marketMap = {
     "S&P 500": "S&P 500 stock market", "NASDAQ": "NASDAQ tech stocks",
@@ -115,13 +159,13 @@ async function fetchAndShowNews() {
     const res = await fetch(`https://newsapi.org/v2/everything?q=${encodeURIComponent(searchQuery)}&language=en&sortBy=publishedAt&pageSize=30&apiKey=${NEWS_API_KEY}`);
     if (!res.ok) throw new Error("API error");
     const data = await res.json();
-    if (data.status !== "ok" || !data.articles.length) return showDemoFallback(filters);
+    if (!data.articles?.length) return showDemoFallback(filters);
 
-    const scoredNews = data.articles.map(article => scoreArticle(article, filters));
+    const scoredNews = data.articles.map(a => scoreArticle(a, filters));
     let filtered = scoredNews.filter(n => n.impact >= filters.minImpact);
     if (filters.longevity !== "all") filtered = filtered.filter(n => n.longevityType === filters.longevity);
 
-    checkForNewNews(filtered); // Send notifications
+    checkForNewNews(filtered);
     displayNews(filtered);
   } catch (err) {
     console.error(err);
@@ -129,15 +173,11 @@ async function fetchAndShowNews() {
   }
 }
 
-// --------------------------
-// SCORE ARTICLE + BUILD EXPLANATIONS
-// --------------------------
 function scoreArticle(article, filters) {
   const title = (article.title || "").toLowerCase();
   const desc = (article.description || "").toLowerCase();
   const fullText = title + " " + desc;
 
-  // Impact scoring
   let impact = 5;
   const high = ["trump", "fed", "rate", "decision", "ban", "approve", "crash", "surge", "record", "deal", "tariff", "announce"];
   const med = ["rise", "fall", "change", "update", "plan", "talks"];
@@ -145,7 +185,6 @@ function scoreArticle(article, filters) {
   med.forEach(w => { if (fullText.includes(w)) impact += 1; });
   impact = Math.max(1, Math.min(10, impact));
 
-  // Longevity
   let longevityType = "1-5hrs", longevityLabel = "1–5 Hours";
   if (fullText.includes("rate") || fullText.includes("policy") || fullText.includes("election") || fullText.includes("trump")) {
     longevityType = "1-2weeks"; longevityLabel = "1–2 Weeks";
@@ -153,14 +192,13 @@ function scoreArticle(article, filters) {
     longevityType = "1-3days"; longevityLabel = "1–3 Days";
   }
 
-  // Match market
   let matchedMarket = "Market News";
   for (const m of filters.markets) {
     if (fullText.includes(m.toLowerCase())) { matchedMarket = m; break; }
   }
 
-  // Auto-generate EXPLANATIONS
-  const explanations = generateExplanations(matchedMarket, title, impact, longevityLabel, filters);
+  const why = generateWhy(title, matchedMarket);
+  const correlation = `This matches your filters:\n• ${matchedMarket} is selected ✅\n• Impact ${impact}/10 meets your min ${filters.minImpact}\n• Window: ${longevityLabel}`;
 
   return {
     market: matchedMarket,
@@ -170,65 +208,39 @@ function scoreArticle(article, filters) {
     impact,
     longevityType,
     longevityLabel,
-    explanations,
+    explanations: { why, correlation },
     time: getTimeAgo(new Date(article.publishedAt)),
     url: article.url
   };
 }
 
-// --------------------------
-// AUTO EXPLANATIONS
-// --------------------------
-function generateExplanations(market, title, impact, longevity, filters) {
-  let why = "", correlation = "";
-
-  // WHY it's happening
+function generateWhy(title, market) {
   if (title.includes("trump") || title.includes("president")) {
-    why = "This relates to statements or actions from the Trump administration. Policy announcements, trade decisions, and regulatory changes often shift market expectations quickly.";
+    return "Statements or policy changes from the administration shift market expectations quickly — affecting confidence, trade rules, and regulations.";
   } else if (title.includes("rate") || title.includes("fed") || title.includes("central bank")) {
-    why = "Interest rate decisions directly affect borrowing costs for companies and governments. Higher rates typically pressure stocks and crypto; lower rates tend to boost growth.";
-  } else if (title.includes("rise") || title.includes("surge") || title.includes("gain")) {
-    why = "Positive momentum — buying pressure, strong data, or optimism is driving price upward. Markets move higher when confidence increases.";
+    return "Interest rates change borrowing costs — higher rates pressure stocks & crypto; lower rates tend to boost growth.";
+  } else if (title.includes("rise") || title.includes("surge")) {
+    return "Buying pressure & optimism driving prices up — markets move higher on confidence.";
   } else if (title.includes("fall") || title.includes("drop") || title.includes("crash")) {
-    why = "Negative pressure — selling, weak data, or uncertainty is pushing prices down. Fear or caution can accelerate declines.";
-  } else if (title.includes("gold") || title.includes("oil") || title.includes("commodity")) {
-    why = "Commodities respond to supply/demand, geopolitics, and currency strength. Gold often acts as a 'safe haven' during uncertainty.";
-  } else {
-    why = "Market news reflects shifting expectations. Traders price in new information, which creates movement.";
+    return "Selling pressure & uncertainty pushing prices down — fear or caution accelerates declines.";
+  } else if (market === "Gold" || market === "Oil") {
+    return "Commodities shift with supply, demand, geopolitics & currency strength. Gold often acts as a 'safe haven' in uncertainty.";
   }
-
-  // CORRELATION to YOUR filters
-  const isInList = filters.markets.includes(market);
-  const scoreMatch = impact >= filters.minImpact;
-  correlation = `This matches your filters because:\n• ${market} is in your selected markets ${isInList ? '✅' : '⚠️'}\n• Impact score ${impact}/10 ${scoreMatch ? 'meets' : 'is above'} your minimum of ${filters.minImpact}\n• Expected effect window: ${longevity}`;
-
-  return { why, correlation };
+  return "New information changes what traders expect — they price it in, which creates movement.";
 }
 
-// --------------------------
-// NOTIFICATIONS
-// --------------------------
 function checkForNewNews(news) {
   if (localStorage.getItem('impulsa_notifications') !== 'true') return;
-  if ("Notification" in window && Notification.permission !== "granted") return;
-
-  const newTitles = news.map(n => n.headline);
+  if (Notification.permission !== "granted") return;
   const brandNew = news.filter(n => !lastNewsTitles.includes(n.headline));
-
   brandNew.slice(0, 2).forEach(item => {
     new Notification(`⚡ Impulsa — ${item.market}`, {
-      body: `${item.headline.substring(0, 60)}...\nImpact: ${item.impact}/10`,
-      icon: "https://newsapi.org/favicon.ico",
-      tag: "impulsa-news"
+      body: `${item.headline.substring(0, 55)}...\nImpact: ${item.impact}/10`
     });
   });
-
-  lastNewsTitles = newTitles;
+  lastNewsTitles = news.map(n => n.headline);
 }
 
-// --------------------------
-// DISPLAY NEWS CARDS
-// --------------------------
 function displayNews(news) {
   newsFeed.innerHTML = "";
   if (!news.length) {
@@ -249,9 +261,6 @@ function displayNews(news) {
   });
 }
 
-// --------------------------
-// SHOW DETAIL PAGE
-// --------------------------
 function showDetail(item) {
   detailContent.innerHTML = `
     <div class="detail-card">
@@ -259,49 +268,5 @@ function showDetail(item) {
       <div class="impact">${'⭐'.repeat(item.impact)} (${item.impact}/10)</div>
       <h3 class="headline">${item.headline}</h3>
       <p style="color:var(--muted);margin-bottom:1rem;">${item.description}</p>
-      
       <h4 class="section-title">🔍 Why this is happening</h4>
-      <p class="explanation">${item.explanations.why}</p>
-      
-      <h4 class="section-title">📊 How this matches your filters</h4>
-      <p class="correlation">${item.explanations.correlation.replaceAll('\n', '<br>')}</p>
-      
-      <p class="longevity-note">⏱️ Effect window: <strong>${item.longevityLabel}</strong></p>
-      
-      <a href="${item.url}" target="_blank" class="read-full">📰 Read full article →</a>
-      <p class="source">Source: ${item.source}</p>
-    </div>
-  `;
-  homePage.classList.remove('active');
-  detailPage.classList.add('active');
-}
-
-// --------------------------
-// DEMO FALLBACK
-// --------------------------
-function showDemoFallback(filters) {
-  const demoArticles = [
-    { title: "Trump policy shifts impact global markets", description: "New trade and regulatory announcements move asset prices across multiple sectors.", source: { name: "Demo" }, publishedAt: new Date(Date.now() - 120000).toISOString() },
-    { title: "Bitcoin sees renewed institutional interest", description: "Major financial firms increase holdings as adoption accelerates.", source: { name: "Demo" }, publishedAt: new Date(Date.now() - 900000).toISOString() },
-    { title: "Gold prices climb on safe-haven demand", description: "Geopolitical uncertainty drives investors toward precious metals.", source: { name: "Demo" }, publishedAt: new Date(Date.now() - 1800000).toISOString() }
-  ];
-  const demoNews = demoArticles.map(a => scoreArticle(a, filters));
-  let filtered = demoNews.filter(n => filters.markets.includes(n.market) && n.impact >= filters.minImpact);
-  if (filters.longevity !== "all") filtered = filtered.filter(n => n.longevityType === filters.longevity);
-  checkForNewNews(filtered);
-  displayNews(filtered);
-}
-
-// Time helper
-function getTimeAgo(pubDate) {
-  const mins = Math.floor((Date.now() - pubDate) / 60000);
-  if (mins < 1) return "Just now";
-  if (mins < 60) return `${mins} min ago`;
-  if (mins < 1440) return `${Math.floor(mins/60)} hr ago`;
-  return `${Math.floor(mins/1440)} days ago`;
-}
-
-// Auto-refresh every 5 mins
-setInterval(() => {
-  if (homePage.classList.contains('active')) fetchAndShowNews();
-}, 300000);
+      <p class="explanation">${item.explanations.why...
