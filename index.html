@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Impulsa — Market News</title>
+  <title>Impulsa</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -13,60 +13,98 @@
 
 <div class="app">
 
-  <!-- ========== FILTER SETUP PAGE ========== -->
-  <div id="filterPage" class="page active">
+  <!-- ============== SETUP PAGE ============== -->
+  <section id="setup-page" class="page active">
     <div class="container">
       <h1 class="logo-text">Impulsa</h1>
-      <p class="subheading">Select your market categories</p>
+      <p class="subhead">Choose your filters</p>
 
-      <!-- Market Categories Dropdown -->
-      <div class="dropdown-box">
-        <button class="dropdown-btn" id="marketDropdown">
-          Market Categories ▼
-        </button>
-        <div class="dropdown-content" id="marketContent">
-          <label><input type="checkbox" class="market-check" value="Indices"> 📊 Indices</label>
-          <label><input type="checkbox" class="market-check" value="Forex"> 💱 Forex</label>
-          <label><input type="checkbox" class="market-check" value="Commodities"> ⛏️ Commodities</label>
-          <label><input type="checkbox" class="market-check" value="Crypto"> ₿ Crypto</label>
-          <label><input type="checkbox" class="market-check" value="Stocks"> 📈 Stocks</label>
-          <label><input type="checkbox" class="market-check" value="Bonds"> 📜 Bonds</label>
-          <label><input type="checkbox" class="market-check" value="ETFs"> 📦 ETFs</label>
+      <!-- NOTIFICATION TOGGLE -->
+      <div class="notification-toggle">
+        <label class="toggle-label">
+          <span>🔔 Push Notifications</span>
+          <label class="switch">
+            <input type="checkbox" id="notifications-enabled">
+            <span class="slider-round"></span>
+          </label>
+        </label>
+        <p class="toggle-note">Get alerts even when app is closed</p>
+      </div>
+
+      <!-- MARKETS DROPDOWN -->
+      <div class="dropdown">
+        <button class="dropdown-btn" data-target="markets-list">Markets ▾</button>
+        <div class="dropdown-list" id="markets-list">
+          <label class="all-option">
+            <input type="checkbox" id="select-all-markets">
+            <strong>All Markets</strong>
+          </label>
+          <div class="divider"></div>
+          <label><input type="checkbox" name="markets" value="S&P 500"> S&P 500</label>
+          <label><input type="checkbox" name="markets" value="NASDAQ"> NASDAQ</label>
+          <label><input type="checkbox" name="markets" value="FTSE 100"> FTSE 100</label>
+          <label><input type="checkbox" name="markets" value="DAX"> DAX</label>
+          <label><input type="checkbox" name="markets" value="EUR/USD"> EUR/USD</label>
+          <label><input type="checkbox" name="markets" value="GBP/USD"> GBP/USD</label>
+          <label><input type="checkbox" name="markets" value="Bitcoin"> Bitcoin</label>
+          <label><input type="checkbox" name="markets" value="Ethereum"> Ethereum</label>
+          <label><input type="checkbox" name="markets" value="Gold"> Gold</label>
+          <label><input type="checkbox" name="markets" value="Oil"> Oil</label>
         </div>
       </div>
 
-      <!-- Impact Level Dropdown -->
-      <div class="dropdown-box">
-        <button class="dropdown-btn" id="impactDropdown">
-          Minimum Impact Level ▼
-        </button>
-        <div class="dropdown-content" id="impactContent">
-          <label><input type="radio" name="impact" value="7"> ⭐ 7 & above</label>
-          <label><input type="radio" name="impact" value="8"> ⭐ 8 & above</label>
-          <label><input type="radio" name="impact" value="9"> ⭐ 9 & above</label>
-          <label><input type="radio" name="impact" value="10"> ⭐ Only 10</label>
+      <!-- LONGEVITY DROPDOWN -->
+      <div class="dropdown">
+        <button class="dropdown-btn" data-target="longevity-list">News Longevity ▾</button>
+        <div class="dropdown-list" id="longevity-list">
+          <label class="all-option">
+            <input type="radio" name="longevity" value="all" checked>
+            <strong>All</strong>
+          </label>
+          <div class="divider"></div>
+          <label><input type="radio" name="longevity" value="1-5hrs"> 1–5 Hours</label>
+          <label><input type="radio" name="longevity" value="1-3days"> 1–3 Days</label>
+          <label><input type="radio" name="longevity" value="1-2weeks"> 1–2 Weeks</label>
         </div>
       </div>
 
-      <!-- Continue Button -->
-      <button class="continue-btn" id="continueBtn">Continue</button>
+      <!-- IMPACT SCORE -->
+      <div class="filter-section">
+        <div class="impact-header">
+          <h3>Minimum Impact Score</h3>
+          <label class="all-checkbox">
+            <input type="checkbox" id="impact-all"> All
+          </label>
+        </div>
+        <input type="range" id="impact-threshold" min="1" max="10" value="7">
+        <p class="score-display">Showing: <strong id="score-value">7 – 10</strong></p>
+      </div>
+
+      <button id="continue-btn" class="continue-btn">Continue →</button>
     </div>
-  </div>
+  </section>
 
-  <!-- ========== HOME SCREEN ========== -->
-  <div id="homePage" class="page">
-    <header class="topbar">
-      <h1 class="logo-text">Impulsa</h1>
-      <button class="settings-btn" id="settingsBtn">⚙️</button>
+  <!-- ============== HOME PAGE ============== -->
+  <section id="home-page" class="page">
+    <header class="home-header">
+      <h2>Impulsa</h2>
+      <button id="settings-btn" class="settings-icon">⚙️</button>
     </header>
-
-    <div class="container">
-      <p class="subheading">Live News Feed</p>
-      <div id="newsFeed" class="news-feed">
-        <div class="empty-state">News will appear here once live...</div>
-      </div>
+    <div class="news-feed" id="news-feed">
+      <p class="empty-state">Waiting for news...</p>
     </div>
-  </div>
+  </section>
+
+  <!-- ============== NEWS DETAIL PAGE ============== -->
+  <section id="detail-page" class="page">
+    <header class="detail-header">
+      <button id="back-btn" class="back-btn">← Back</button>
+      <h2>News Detail</h2>
+    </header>
+    <div class="detail-content" id="detail-content">
+      <!-- Filled by JS -->
+    </div>
+  </section>
 
 </div>
 
