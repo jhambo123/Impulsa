@@ -1,10 +1,11 @@
 // ==================================================
-// IMPULSA — FILTERS SAVED UNTIL YOU CHANGE THEM
+// IMPULSA — FIXED DROPDOWNS + FILTERS SAVED
 // ==================================================
 
-// 🔑 PUT YOUR REAL NEWSAPI KEY HERE
+// 🔑 YOUR NEWSAPI KEY — PUT YOUR REAL KEY INSIDE THE QUOTES
 const NEWS_API_KEY = "pub_98a9005051034de29cb0aca05a77fc4a";
 
+// Get ALL page elements
 const setupPage = document.getElementById('setup-page');
 const homePage = document.getElementById('home-page');
 const detailPage = document.getElementById('detail-page');
@@ -22,9 +23,44 @@ const detailContent = document.getElementById('detail-content');
 let lastNewsTitles = [];
 
 // ==================================================
-// REMEMBER EVERYTHING ON LOAD
+// ✅ FIXED DROPDOWN CODE — THIS MAKES THEM CLICKABLE
 // ==================================================
-window.addEventListener('load', () => {
+function setupDropdowns() {
+  const dropdownBtns = document.querySelectorAll('.dropdown-btn');
+  
+  dropdownBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const targetId = btn.getAttribute('data-target');
+      const list = document.getElementById(targetId);
+      
+      // Close ALL other dropdowns first
+      document.querySelectorAll('.dropdown-list').forEach(dl => {
+        if (dl.id !== targetId) dl.classList.remove('open');
+      });
+      
+      // Toggle THIS dropdown
+      list.classList.toggle('open');
+    });
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.dropdown-list').forEach(dl => {
+      dl.classList.remove('open');
+    });
+  });
+
+  // Keep dropdown open when clicking inside
+  document.querySelectorAll('.dropdown-list').forEach(list => {
+    list.addEventListener('click', (e) => e.stopPropagation());
+  });
+}
+
+// ==================================================
+// REMEMBER SAVED FILTERS
+// ==================================================
+function loadSavedFilters() {
   const savedFilters = localStorage.getItem('impulsa_filters');
   const lastScreen = localStorage.getItem('impulsa_last_screen');
 
@@ -42,7 +78,7 @@ window.addEventListener('load', () => {
     const longRadio = document.querySelector(`input[name="longevity"][value="${f.longevity}"]`);
     if (longRadio) longRadio.checked = true;
 
-    // Restore impact
+    // Restore impact slider
     if (f.showAllImpact) {
       impactAllCheckbox.checked = true;
       slider.disabled = true;
@@ -54,7 +90,7 @@ window.addEventListener('load', () => {
       scoreValue.textContent = `${slider.value} – 10`;
     }
 
-    // Go to last screen
+    // Go straight to Home if that's where we left off
     if (lastScreen === 'home') {
       setupPage.classList.remove('active');
       homePage.classList.add('active');
@@ -65,80 +101,89 @@ window.addEventListener('load', () => {
   // Restore notification toggle
   const notifOn = localStorage.getItem('impulsa_notifications') === 'true';
   notificationsToggle.checked = notifOn && Notification.permission === "granted";
-});
+}
 
 // ==================================================
-// DROPDOWNS & TOGGLES
+// PAGE FULLY LOADED → RUN EVERYTHING
 // ==================================================
-document.querySelectorAll('.dropdown-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.getElementById(btn.dataset.target).classList.toggle('open');
+document.addEventListener('DOMContentLoaded', () => {
+  setupDropdowns(); // ✅ Dropdowns work FIRST
+  loadSavedFilters();
+
+  // Select All Markets
+  selectAllMarkets.addEventListener('change', () => {
+    document.querySelectorAll('input[name="markets"]').forEach(cb => {
+      cb.checked = selectAllMarkets.checked;
+    });
+  });
+
+  // Impact slider
+  slider.addEventListener('input', () => {
+    scoreValue.textContent = `${slider.value} – 10`;
+    impactAllCheckbox.checked = false;
+  });
+
+  impactAllCheckbox.addEventListener('change', () => {
+    slider.disabled = impactAllCheckbox.checked;
+    scoreValue.textContent = impactAllCheckbox.checked ? "All Scores" : `${slider.value} – 10`;
+  });
+
+  // Notifications toggle
+  notificationsToggle.addEventListener('change', async () => {
+    if (notificationsToggle.checked) {
+      const perm = await Notification.requestPermission();
+      notificationsToggle.checked = perm === "granted";
+    }
+    localStorage.setItem('impulsa_notifications', notificationsToggle.checked);
+  });
+
+  // ==================================================
+  // ✅ CONTINUE BUTTON — GOES TO NEXT PAGE
+  // ==================================================
+  continueBtn.addEventListener('click', async () => {
+    const selectedMarkets = [...document.querySelectorAll('input[name="markets"]:checked')].map(cb => cb.value);
+    
+    if (selectedMarkets.length === 0) {
+      alert('⚠️ Pick at least ONE market first!');
+      return;
+    }
+
+    const filters = {
+      markets: selectedMarkets,
+      longevity: document.querySelector('input[name="longevity"]:checked')?.value || "all",
+      minImpact: impactAllCheckbox.checked ? 1 : parseInt(slider.value),
+      showAllImpact: impactAllCheckbox.checked
+    };
+
+    // Save forever until changed
+    localStorage.setItem('impulsa_filters', JSON.stringify(filters));
+    localStorage.setItem('impulsa_last_screen', 'home');
+
+    // ✅ SWITCH PAGE — THIS IS WHAT WAS MISSING
+    setupPage.classList.remove('active');
+    homePage.classList.add('active');
+    
+    lastNewsTitles = [];
+    await fetchAndShowNews();
+  });
+
+  // Settings button
+  settingsBtn.addEventListener('click', () => {
+    localStorage.setItem('impulsa_last_screen', 'setup');
+    homePage.classList.remove('active');
+    setupPage.classList.add('active');
+  });
+
+  // Back button
+  backBtn.addEventListener('click', () => {
+    localStorage.setItem('impulsa_last_screen', 'home');
+    detailPage.classList.remove('active');
+    homePage.classList.add('active');
   });
 });
 
-selectAllMarkets.addEventListener('change', () => {
-  document.querySelectorAll('input[name="markets"]').forEach(cb => cb.checked = selectAllMarkets.checked);
-});
-
-slider.addEventListener('input', () => {
-  scoreValue.textContent = `${slider.value} – 10`;
-  impactAllCheckbox.checked = false;
-});
-
-impactAllCheckbox.addEventListener('change', () => {
-  slider.disabled = impactAllCheckbox.checked;
-  scoreValue.textContent = impactAllCheckbox.checked ? "All Scores" : `${slider.value} – 10`;
-});
-
-notificationsToggle.addEventListener('change', async () => {
-  if (notificationsToggle.checked) {
-    const perm = await Notification.requestPermission();
-    notificationsToggle.checked = perm === "granted";
-  }
-  localStorage.setItem('impulsa_notifications', notificationsToggle.checked);
-});
-
 // ==================================================
-// CONTINUE — SAVE FILTERS
-// ==================================================
-continueBtn.addEventListener('click', async () => {
-  const selectedMarkets = [...document.querySelectorAll('input[name="markets"]:checked')].map(cb => cb.value);
-  if (selectedMarkets.length === 0) return alert('Pick at least one market first!');
-
-  const filters = {
-    markets: selectedMarkets,
-    longevity: document.querySelector('input[name="longevity"]:checked')?.value || "all",
-    minImpact: impactAllCheckbox.checked ? 1 : parseInt(slider.value),
-    showAllImpact: impactAllCheckbox.checked
-  };
-
-  // ✅ SAVED — stays until you change it
-  localStorage.setItem('impulsa_filters', JSON.stringify(filters));
-  localStorage.setItem('impulsa_last_screen', 'home');
-
-  setupPage.classList.remove('active');
-  homePage.classList.add('active');
-  lastNewsTitles = [];
-  await fetchAndShowNews();
-});
-
-// ==================================================
-// SETTINGS — GO EDIT FILTERS
-// ==================================================
-settingsBtn.addEventListener('click', () => {
-  localStorage.setItem('impulsa_last_screen', 'setup');
-  homePage.classList.remove('active');
-  setupPage.classList.add('active');
-});
-
-backBtn.addEventListener('click', () => {
-  localStorage.setItem('impulsa_last_screen', 'home');
-  detailPage.classList.remove('active');
-  homePage.classList.add('active');
-});
-
-// ==================================================
-// FETCH & SCORE NEWS
+// NEWS FETCH & SCORING
 // ==================================================
 async function fetchAndShowNews() {
   if (!homePage.classList.contains('active')) return;
@@ -146,11 +191,16 @@ async function fetchAndShowNews() {
 
   const filters = JSON.parse(localStorage.getItem('impulsa_filters'));
   const marketMap = {
-    "S&P 500": "S&P 500 stock market", "NASDAQ": "NASDAQ tech stocks",
-    "FTSE 100": "FTSE 100 UK", "DAX": "DAX Germany",
-    "EUR/USD": "EUR USD forex", "GBP/USD": "GBP USD pound",
-    "Bitcoin": "Bitcoin BTC crypto", "Ethereum": "Ethereum ETH",
-    "Gold": "Gold price commodity", "Oil": "Oil price crude"
+    "S&P 500": "S&P 500 stock market",
+    "NASDAQ": "NASDAQ tech stocks",
+    "FTSE 100": "FTSE 100 UK",
+    "DAX": "DAX Germany",
+    "EUR/USD": "EUR USD forex",
+    "GBP/USD": "GBP USD pound",
+    "Bitcoin": "Bitcoin BTC crypto",
+    "Ethereum": "Ethereum ETH",
+    "Gold": "Gold price commodity",
+    "Oil": "Oil price crude"
   };
 
   const searchQuery = `(${filters.markets.map(m => marketMap[m] || m).join(" OR ")}) AND (market OR economy OR policy OR news OR Trump)`;
@@ -179,10 +229,10 @@ function scoreArticle(article, filters) {
   const fullText = title + " " + desc;
 
   let impact = 5;
-  const high = ["trump", "fed", "rate", "decision", "ban", "approve", "crash", "surge", "record", "deal", "tariff", "announce"];
-  const med = ["rise", "fall", "change", "update", "plan", "talks"];
-  high.forEach(w => { if (fullText.includes(w)) impact += 2; });
-  med.forEach(w => { if (fullText.includes(w)) impact += 1; });
+  const highWords = ["trump", "fed", "rate", "decision", "ban", "approve", "crash", "surge", "record", "deal", "tariff", "announce"];
+  const medWords = ["rise", "fall", "change", "update", "plan", "talks"];
+  highWords.forEach(w => { if (fullText.includes(w)) impact += 2; });
+  medWords.forEach(w => { if (fullText.includes(w)) impact += 1; });
   impact = Math.max(1, Math.min(10, impact));
 
   let longevityType = "1-5hrs", longevityLabel = "1–5 Hours";
@@ -216,17 +266,17 @@ function scoreArticle(article, filters) {
 
 function generateWhy(title, market) {
   if (title.includes("trump") || title.includes("president")) {
-    return "Statements or policy changes from the administration shift market expectations quickly — affecting confidence, trade rules, and regulations.";
-  } else if (title.includes("rate") || title.includes("fed") || title.includes("central bank")) {
-    return "Interest rates change borrowing costs — higher rates pressure stocks & crypto; lower rates tend to boost growth.";
+    return "Statements or policy changes shift market expectations — affecting trade, rules & confidence.";
+  } else if (title.includes("rate") || title.includes("fed")) {
+    return "Interest rates change borrowing costs — higher = pressure; lower = growth boost.";
   } else if (title.includes("rise") || title.includes("surge")) {
-    return "Buying pressure & optimism driving prices up — markets move higher on confidence.";
-  } else if (title.includes("fall") || title.includes("drop") || title.includes("crash")) {
-    return "Selling pressure & uncertainty pushing prices down — fear or caution accelerates declines.";
+    return "Buying & optimism pushing prices up — markets move higher on confidence.";
+  } else if (title.includes("fall") || title.includes("drop")) {
+    return "Selling & uncertainty pushing prices down — fear accelerates declines.";
   } else if (market === "Gold" || market === "Oil") {
-    return "Commodities shift with supply, demand, geopolitics & currency strength. Gold often acts as a 'safe haven' in uncertainty.";
+    return "Commodities shift with supply, demand & geopolitics. Gold = safe haven.";
   }
-  return "New information changes what traders expect — they price it in, which creates movement.";
+  return "New info changes expectations — traders price it in → market moves.";
 }
 
 function checkForNewNews(news) {
@@ -269,4 +319,40 @@ function showDetail(item) {
       <h3 class="headline">${item.headline}</h3>
       <p style="color:var(--muted);margin-bottom:1rem;">${item.description}</p>
       <h4 class="section-title">🔍 Why this is happening</h4>
-      <p class="explanation">${item.explanations.why...
+      <p class="explanation">${item.explanations.why}</p>
+      <h4 class="section-title">📊 How this matches your filters</h4>
+      <p class="correlation">${item.explanations.correlation.replaceAll('\n', '<br>')}</p>
+      <p class="longevity-note">⏱️ Effect window: <strong>${item.longevityLabel}</strong></p>
+      <a href="${item.url}" target="_blank" class="read-full">📰 Read full article →</a>
+      <p class="source">Source: ${item.source}</p>
+    </div>
+  `;
+  homePage.classList.remove('active');
+  detailPage.classList.add('active');
+}
+
+function showDemoFallback(filters) {
+  const demoArticles = [
+    { title: "Trump policy shifts impact global markets", description: "New trade and regulatory announcements move asset prices across multiple sectors.", source: { name: "Demo" }, publishedAt: new Date(Date.now() - 120000).toISOString() },
+    { title: "Bitcoin sees renewed institutional interest", description: "Major financial firms increase holdings as adoption accelerates.", source: { name: "Demo" }, publishedAt: new Date(Date.now() - 900000).toISOString() },
+    { title: "Gold prices climb on safe-haven demand", description: "Geopolitical uncertainty drives investors toward precious metals.", source: { name: "Demo" }, publishedAt: new Date(Date.now() - 1800000).toISOString() }
+  ];
+  const demoNews = demoArticles.map(a => scoreArticle(a, filters));
+  let filtered = demoNews.filter(n => filters.markets.includes(n.market) && n.impact >= filters.minImpact);
+  if (filters.longevity !== "all") filtered = filtered.filter(n => n.longevityType === filters.longevity);
+  checkForNewNews(filtered);
+  displayNews(filtered);
+}
+
+function getTimeAgo(pubDate) {
+  const mins = Math.floor((Date.now() - pubDate) / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins} min ago`;
+  if (mins < 1440) return `${Math.floor(mins/60)} hr ago`;
+  return `${Math.floor(mins/1440)} days ago`;
+}
+
+// Auto-refresh every 5 mins
+setInterval(() => {
+  if (homePage.classList.contains('active')) fetchAndShowNews();
+}, 300000);
